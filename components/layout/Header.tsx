@@ -1,24 +1,10 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-const TABS = [
-  { href: '/log',     label: 'Log match' },
-  { href: '/live',    label: 'Live' },
-  { href: '/history', label: 'History' },
-  { href: '/stats',   label: 'Stats' },
-  { href: '/players', label: 'Players' },
-]
-
-interface HeaderProps {
-  hasLiveMatch?: boolean
-}
-
-export default function Header({ hasLiveMatch }: HeaderProps) {
-  const pathname = usePathname()
-  const router   = useRouter()
+export default function Header() {
+  const router = useRouter()
 
   async function signOut() {
     const supabase = createClient()
@@ -40,22 +26,10 @@ export default function Header({ hasLiveMatch }: HeaderProps) {
           <div className="brand-sub">match tracker for the regulars</div>
         </div>
       </div>
-
-      <nav className="tab-row">
-        {TABS.map(({ href, label }) => (
-          <Link
-            key={href}
-            href={href}
-            className={`tab-btn ${pathname === href ? 'active' : ''}`}
-          >
-            {label}
-            {href === '/live' && hasLiveMatch ? ' •' : ''}
-          </Link>
-        ))}
-        <button className="tab-btn" onClick={signOut} style={{ marginLeft: 8 }}>
-          Sign out
-        </button>
-      </nav>
+      <button className="btn btn-ghost btn-sm" onClick={signOut}>
+        <i className="ti ti-logout" style={{ fontSize: 14, marginRight: 5, verticalAlign: '-2px' }} />
+        Sign out
+      </button>
     </div>
   )
 }

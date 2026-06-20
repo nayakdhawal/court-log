@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import PlayerPicker from '@/components/shared/PlayerPicker'
+import PlayerDropdown from '@/components/shared/PlayerDropdown'
 import { addMatch } from '@/lib/actions'
 import { countSetsWon, projectWinner } from '@/lib/scoring'
 import type { Player } from '@/types'
@@ -25,11 +25,6 @@ export default function LogMatch({ players }: Props) {
 
   const maxPerSide = type === 'singles' ? 1 : 2
 
-  function updateSet(i: number, side: 'a' | 'b', val: string) {
-    const cleaned = val.replace(/[^0-9]/g, '').slice(0, 2)
-    setSets(prev => prev.map((s, idx) => idx === i ? { ...s, [side]: cleaned } : s))
-  }
-
   function reset() {
     setSideA([]); setSideB([]); setSets([{ a: '', b: '' }]); setMatchComplete(true); setError('')
   }
@@ -37,7 +32,7 @@ export default function LogMatch({ players }: Props) {
   function handleSubmit() {
     setError('')
     if (sideA.length !== maxPerSide || sideB.length !== maxPerSide) {
-      setError(`Each side needs exactly ${maxPerSide} player${maxPerSide > 1 ? 's' : ''}.`)
+      setError(`Select ${maxPerSide} player${maxPerSide > 1 ? 's' : ''} for each side.`)
       return
     }
     if (sideA.some(n => sideB.includes(n))) {
@@ -57,7 +52,7 @@ export default function LogMatch({ players }: Props) {
 
     if (matchComplete) {
       if (setsA === setsB) {
-        setError("Sets are tied — this can't be a completed match. Uncheck 'match completed' or fix the score.")
+        setError("Sets are tied — uncheck 'match completed' or fix the score.")
         return
       }
       winnerSide = setsA > setsB ? 0 : 1
@@ -65,10 +60,7 @@ export default function LogMatch({ players }: Props) {
       const gamesA = parsedSets.reduce((s, [a]) => s + a, 0)
       const gamesB = parsedSets.reduce((s, [, b]) => s + b, 0)
       const proj = projectWinner(setsA, setsB, gamesA, gamesB, 0, 0)
-      if (proj === null) {
-        setError("Score is perfectly even — can't project a winner.")
-        return
-      }
+      if (proj === null) { setError("Score is perfectly even — can't project a winner."); return }
       winnerSide = proj
       projected = true
     }
@@ -97,7 +89,7 @@ export default function LogMatch({ players }: Props) {
   return (
     <div className="panel">
       <div className="panel-title">Log a match</div>
-      <div className="hint">Enter scores after the fact — for live point-by-point scoring use the Live tab.</div>
+      <div className="hint">Enter scores after the fact — for live scoring use the Live tab.</div>
 
       <div className="row">
         <div className="field">
@@ -114,29 +106,33 @@ export default function LogMatch({ players }: Props) {
       </div>
 
       <div className="section-flex">
-        <div>
-          <label>Side A {type === 'doubles' ? '(team)' : ''}</label>
-          <PlayerPicker players={players} selected={sideA} onChange={setSideA} excludeNames={sideB} placeholder="Add player to side A" maxCount={maxPerSide} />
-        </div>
-        <div>
-          <label>Side B {type === 'doubles' ? '(team)' : ''}</label>
-          <PlayerPicker players={players} selected={sideB} onChange={setSideB} excludeNames={sideA} placeholder="Add player to side B" maxCount={maxPerSide} />
-        </div>
+        <PlayerDropdown
+          players={players}
+          selected={sideA}
+          onChange={setSideA}
+          excludeNames={sideB}
+          maxCount={maxPerSide as 1 | 2}
+          sideLabel="Side A"
+        />
+        <PlayerDropdown
+          players={players}
+          selected={sideB}
+          onChange={setSideB}
+          excludeNames={sideA}
+          maxCount={maxPerSide as 1 | 2}
+          sideLabel="Side B"
+        />
       </div>
 
       <label style={{ marginTop: 4 }}>Set scores</label>
       {sets.map((s, i) => (
-        <div key={i} className="row" style={{ marginBottom: 8, alignItems: 'center' }}>
-          <div className="field" style={{ margin: 0 }}>
-            <input type="text" inputMode="numeric" value={s.a} onChange={e => updateSet(i, 'a', e.target.value)} placeholder="Side A games" />
-          </div>
-          <span style={{ color: '#8a8576', fontWeight: 700 }}>–</span>
-          <div className="field" style={{ margin: 0 }}>
-            <input type="text" inputMode="numeric" value={s.b} onChange={e => updateSet(i, 'b', e.target.value)} placeholder="Side B games" />
-          </div>
+        <div key={i} className="set-score-row">
+          <input type="text" inputMode="numeric" value={s.a} onChange={e => setSets(prev => prev.map((x, xi) => xi === i ? { ...x, a: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) } : x))} placeholder="Side A" />
+          <span className="set-dash">–</span>
+          <input type="text" inputMode="numeric" value={s.b} onChange={e => setSets(prev => prev.map((x, xi) => xi === i ? { ...x, b: e.target.value.replace(/[^0-9]/g, '').slice(0, 2) } : x))} placeholder="Side B" />
           {sets.length > 1 && (
-            <button className="btn btn-ghost btn-sm" onClick={() => setSets(prev => prev.filter((_, idx) => idx !== i))}>
-              <i className="ti ti-trash" style={{ fontSize: 13, marginRight: 4, verticalAlign: '-2px' }} />Remove
+            <button className="btn btn-ghost btn-sm" onClick={() => setSets(prev => prev.filter((_, xi) => xi !== i))}>
+              <i className="ti ti-trash" style={{ fontSize: 13 }} />
             </button>
           )}
         </div>
@@ -152,7 +148,7 @@ export default function LogMatch({ players }: Props) {
       {!matchComplete && (
         <div className="hint" style={{ marginTop: -6 }}>
           <i className="ti ti-info-circle" style={{ marginRight: 4 }} />
-          Winner will be projected: whoever is ahead in sets, then total games.
+          Winner will be projected from sets, then total games.
         </div>
       )}
 

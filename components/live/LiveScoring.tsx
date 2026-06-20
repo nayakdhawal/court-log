@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import PlayerPicker from '@/components/shared/PlayerPicker'
+import PlayerDropdown from '@/components/shared/PlayerDropdown'
 import { addMatch } from '@/lib/actions'
 import {
   newLiveMatch, addPoint, undoPoint, isMatchWon, countSetsWon,
@@ -49,7 +49,7 @@ export default function LiveScoring({ players }: Props) {
   function startMatch() {
     setError('')
     if (sideA.length !== maxPerSide || sideB.length !== maxPerSide) {
-      setError(`Each side needs exactly ${maxPerSide} player${maxPerSide > 1 ? 's' : ''}.`)
+      setError(`Select ${maxPerSide} player${maxPerSide > 1 ? 's' : ''} for each side.`)
       return
     }
     if (sideA.some(n => sideB.includes(n))) { setError("A player can't be on both sides."); return }
@@ -143,14 +143,8 @@ export default function LiveScoring({ players }: Props) {
         </div>
 
         <div className="section-flex">
-          <div>
-            <label>Side A {type === 'doubles' ? '(team)' : ''}</label>
-            <PlayerPicker players={players} selected={sideA} onChange={setSideA} excludeNames={sideB} placeholder="Add player to side A" maxCount={maxPerSide} />
-          </div>
-          <div>
-            <label>Side B {type === 'doubles' ? '(team)' : ''}</label>
-            <PlayerPicker players={players} selected={sideB} onChange={setSideB} excludeNames={sideA} placeholder="Add player to side B" maxCount={maxPerSide} />
-          </div>
+          <PlayerDropdown players={players} selected={sideA} onChange={setSideA} excludeNames={sideB} maxCount={maxPerSide as 1 | 2} sideLabel="Side A" />
+          <PlayerDropdown players={players} selected={sideB} onChange={setSideB} excludeNames={sideA} maxCount={maxPerSide as 1 | 2} sideLabel="Side B" />
         </div>
 
         {error && <div style={{ color: 'var(--clay-dark)', fontSize: 13, marginBottom: 12, fontWeight: 600 }}>{error}</div>}

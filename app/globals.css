@@ -32,7 +32,7 @@ body {
 /* Header */
 .header {
   display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+  margin-bottom: 24px; gap: 12px;
 }
 .brand { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
@@ -195,7 +195,83 @@ input[type=text]:focus, input[type=date]:focus, select:focus { border-color: var
 }
 .proj-banner i { font-size: 18px; flex-shrink: 0; }
 
-@media (max-width: 560px) {
-  .ledger-row { grid-template-columns: 50px 1fr 70px; }
-  .ledger-row .vs-col, .ledger-row .date-col { display: none; }
+/* ===== Set score row ===== */
+.set-score-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.set-score-row input { flex: 1; min-width: 0; }
+.set-dash { color: #8a8576; font-weight: 700; flex-shrink: 0; }
+
+/* ===== Bottom nav ===== */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  background: #fff; border-top: 1px solid var(--line);
+  display: flex; align-items: stretch;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.bottom-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 10px 4px 8px;
+  font-size: 10px; font-weight: 600; color: var(--court-light);
+  text-decoration: none; letter-spacing: 0.2px;
+  transition: color .15s, background .15s;
+}
+.bottom-nav-item i { font-size: 20px; }
+.bottom-nav-item.active { color: var(--court); background: rgba(28,61,46,0.06); }
+.bottom-nav-item:hover:not(.active) { background: rgba(28,61,46,0.04); }
+
+/* ===== Global bottom padding so content clears the nav bar ===== */
+#app { padding-bottom: calc(70px + env(safe-area-inset-bottom)); }
+
+/* ===== Mobile ===== */
+@media (max-width: 600px) {
+  #app { padding: 16px 12px calc(70px + env(safe-area-inset-bottom)); }
+
+  .header { margin-bottom: 16px; }
+  .brand-title { font-size: 22px; }
+  .brand-sub { display: none; }
+  .brand-mark { width: 34px; height: 34px; }
+
+  /* Stack section-flex vertically on mobile */
+  .section-flex { flex-direction: column; gap: 12px; }
+  .section-flex > div { min-width: 0; }
+
+  /* Tighter panels */
+  .panel { padding: 14px 12px; }
+
+  /* Set score row compact */
+  .set-score-row { gap: 6px; }
+
+  /* Scoreboard */
+  .scoreboard { padding: 12px; }
+  .sb-points { width: 38px; font-size: 17px; }
+  .sb-set { width: 24px; font-size: 13px; }
+  .sb-name { font-size: 13px; }
+
+  /* Point pad — stack on very small screens */
+  .point-pad { flex-direction: column; }
+
+  /* Ledger */
+  .ledger-row { grid-template-columns: 1fr auto; gap: 8px; }
+  .ledger-row .date-col,
+  .ledger-row .vs-col { display: none; }
+  .ledger-score { font-size: 12px; }
+
+  /* Stat grid */
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+
+  /* H2H table */
+  .h2h-bar-wrap { display: none; }
+
+  /* Toggle group */
+  .toggle-group { font-size: 12px; }
+  .toggle-opt { padding: 7px 6px; font-size: 12px; }
+
+  /* Buttons row */
+  .row { gap: 8px; }
+}
+
+@media (max-width: 380px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .point-pad .point-btn { padding: 12px 8px; }
 }

@@ -6,7 +6,7 @@ export default async function LivePage() {
   const players = await getPlayers()
   return (
     <>
-      <Header hasLiveMatch />
+      <Header />
       <LiveScoring players={players} />
     </>
   )
