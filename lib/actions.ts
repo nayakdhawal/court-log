@@ -163,3 +163,21 @@ export async function archivePlayer(id: number): Promise<void> {
   if (error) throw error
   revalidatePath('/players')
 }
+
+export async function deleteMatch(matchId: number): Promise<void> {
+  const supabase = await createClient()
+
+  // Delete dependent rows first to satisfy FK constraints
+  const { error: pErr } = await supabase.from('match_participants').delete().eq('match_id', matchId)
+  if (pErr) throw pErr
+
+  const { error: sErr } = await supabase.from('match_sets').delete().eq('match_id', matchId)
+  if (sErr) throw sErr
+
+  // Delete the match itself
+  const { error: mErr } = await supabase.from('matches').delete().eq('id', matchId)
+  if (mErr) throw mErr
+
+  revalidatePath('/history')
+  revalidatePath('/stats')
+}

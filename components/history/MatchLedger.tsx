@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateMatch } from '@/lib/actions'
+import { updateMatch, deleteMatch } from '@/lib/actions'
 import { fmtDate, setsDisplayString, countSetsWon, projectWinner } from '@/lib/scoring'
 import PlayerPicker from '@/components/shared/PlayerPicker'
 import type { MatchView, Player, MatchInput } from '@/types'
@@ -15,7 +15,21 @@ interface Props {
 export default function MatchLedger({ matches, players }: Props) {
   const sorted = useMemo(() => [...matches].sort((a, b) => b.played_on.localeCompare(a.played_on)), [matches])
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<MatchView | null>(null)
+  const [isPending, startTransition] = useTransition()
   const router = useRouter()
+
+  function handleDelete(matchId: number) {
+    startTransition(async () => {
+      try {
+        await deleteMatch(matchId)
+        setConfirmDelete(null)
+        router.refresh()
+      } catch (err) {
+        console.error(err)
+      }
+    })
+  }
 
   if (sorted.length === 0) {
     return (
@@ -29,44 +43,67 @@ export default function MatchLedger({ matches, players }: Props) {
   }
 
   return (
-    <div className="panel">
-      <div className="panel-title">Match history</div>
-      {sorted.map(m => {
-        if (editingId === m.id) {
-          return (
-            <EditMatchRow
-              key={m.id}
-              match={m}
-              players={players}
-              onSave={async (input) => {
-                await updateMatch(m.id, input)
-                setEditingId(null)
-                router.refresh()
-              }}
-              onCancel={() => setEditingId(null)}
-            />
-          )
-        }
-        const winnerNames = m.winner_side === 0 ? m.sideA : m.sideB
-        const loserNames  = m.winner_side === 0 ? m.sideB : m.sideA
-        return (
-          <div className="ledger-row" key={m.id}>
-            <div className="date-col">{fmtDate(m.played_on)}</div>
-            <div className="ledger-names">
-              <div className="winner">{winnerNames.join(' / ')}</div>
-              <div className="loser">{loserNames.join(' / ')}</div>
-            </div>
-            <div className="vs-col">{m.match_type === 'doubles' ? 'dbl' : 'sgl'}</div>
-            <div className="ledger-score mono">{setsDisplayString(m.setScores)}</div>
-            <div className="ledger-meta">
-              {!m.is_completed && <span className="pill pill-live" title="Winner projected from incomplete score">proj.</span>}
-              <button className="btn btn-icon" onClick={() => setEditingId(m.id)} title="Edit" style={{ color: '#2A6B3D', fontSize: 20 }}>
-                <i className="ti ti-edit" />
-              </button>
-            </div>
+    <div>
+      {confirmDelete && (
+        <div className="panel" style={{ border: '1px solid var(--clay)', marginBottom: 18 }}>
+          <div className="hint" style={{ marginBottom: 14 }}>
+            <i className="ti ti-alert-triangle" style={{ marginRight: 4 }} />
+            Are you sure you want to permanently delete the match played on <strong>{fmtDate(confirmDelete.played_on)}</strong> between <strong>{confirmDelete.sideA.join(' / ')}</strong> and <strong>{confirmDelete.sideB.join(' / ')}</strong>? This action cannot be undone.
           </div>
-        )
-      })}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-danger" onClick={() => handleDelete(confirmDelete.id)} disabled={isPending}>
+              <i className="ti ti-trash" style={{ fontSize: 14, marginRight: 5, verticalAlign: '-2px' }} />
+              {isPending ? 'Deleting…' : 'Delete permanently'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => setConfirmDelete(null)} disabled={isPending}>
+              <i className="ti ti-x" style={{ fontSize: 14, marginRight: 5, verticalAlign: '-2px' }} />Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="panel">
+        <div className="panel-title">Match history</div>
+        {sorted.map(m => {
+          if (editingId === m.id) {
+            return (
+              <EditMatchRow
+                key={m.id}
+                match={m}
+                players={players}
+                onSave={async (input) => {
+                  await updateMatch(m.id, input)
+                  setEditingId(null)
+                  router.refresh()
+                }}
+                onCancel={() => setEditingId(null)}
+              />
+            )
+          }
+          const winnerNames = m.winner_side === 0 ? m.sideA : m.sideB
+          const loserNames  = m.winner_side === 0 ? m.sideB : m.sideA
+          return (
+            <div className="ledger-row" key={m.id}>
+              <div className="date-col">{fmtDate(m.played_on)}</div>
+              <div className="ledger-names">
+                <div className="winner">{winnerNames.join(' / ')}</div>
+                <div className="loser">{loserNames.join(' / ')}</div>
+              </div>
+              <div className="vs-col">{m.match_type === 'doubles' ? 'dbl' : 'sgl'}</div>
+              <div className="ledger-score mono">{setsDisplayString(m.setScores)}</div>
+              <div className="ledger-meta">
+                {!m.is_completed && <span className="pill pill-live" title="Winner projected from incomplete score">proj.</span>}
+                <button className="btn btn-icon edit" onClick={() => setEditingId(m.id)} title="Edit" style={{ fontSize: 20 }}>
+                  <i className="ti ti-edit" />
+                </button>
+                <button className="btn btn-icon delete" onClick={() => setConfirmDelete(m)} title="Delete" style={{ fontSize: 20 }}>
+                  <i className="ti ti-trash" />
+                </button>
+              </div>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
