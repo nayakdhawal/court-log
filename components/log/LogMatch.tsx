@@ -105,7 +105,7 @@ export default function LogMatch({ players }: Props) {
         </div>
       </div>
 
-      <div className="section-flex">
+      <div className="player-grid">
         <PlayerDropdown
           players={players}
           selected={sideA}

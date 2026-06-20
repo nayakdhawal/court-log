@@ -125,24 +125,22 @@ export default function LiveScoring({ players }: Props) {
         <div className="panel-title">Start a live match</div>
         <div className="hint">Score it point by point as you play.</div>
 
-        <div className="row">
-          <div className="field">
-            <label>Match type</label>
-            <div className="toggle-group">
-              <div className={`toggle-opt ${type === 'singles' ? 'active' : ''}`} onClick={() => { setType('singles'); setSideA([]); setSideB([]) }}>Singles</div>
-              <div className={`toggle-opt ${type === 'doubles' ? 'active' : ''}`} onClick={() => { setType('doubles'); setSideA([]); setSideB([]) }}>Doubles</div>
-            </div>
+        <div className="field">
+          <label>Match type</label>
+          <div className="toggle-group">
+            <div className={`toggle-opt ${type === 'singles' ? 'active' : ''}`} onClick={() => { setType('singles'); setSideA([]); setSideB([]) }}>Singles</div>
+            <div className={`toggle-opt ${type === 'doubles' ? 'active' : ''}`} onClick={() => { setType('doubles'); setSideA([]); setSideB([]) }}>Doubles</div>
           </div>
-          <div className="field">
-            <label>Format</label>
-            <div className="toggle-group">
-              <div className={`toggle-opt ${bestOf3 ? 'active' : ''}`} onClick={() => setBestOf3(true)}>Best of 3 sets</div>
-              <div className={`toggle-opt ${!bestOf3 ? 'active' : ''}`} onClick={() => setBestOf3(false)}>Single set</div>
-            </div>
+        </div>
+        <div className="field">
+          <label>Format</label>
+          <div className="toggle-group">
+            <div className={`toggle-opt ${bestOf3 ? 'active' : ''}`} onClick={() => setBestOf3(true)}>Best of 3 sets</div>
+            <div className={`toggle-opt ${!bestOf3 ? 'active' : ''}`} onClick={() => setBestOf3(false)}>Single set</div>
           </div>
         </div>
 
-        <div className="section-flex">
+        <div className="player-grid">
           <PlayerDropdown players={players} selected={sideA} onChange={setSideA} excludeNames={sideB} maxCount={maxPerSide as 1 | 2} sideLabel="Side A" />
           <PlayerDropdown players={players} selected={sideB} onChange={setSideB} excludeNames={sideA} maxCount={maxPerSide as 1 | 2} sideLabel="Side B" />
         </div>

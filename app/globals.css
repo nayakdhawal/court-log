@@ -195,6 +195,18 @@ input[type=text]:focus, input[type=date]:focus, select:focus { border-color: var
 }
 .proj-banner i { font-size: 18px; flex-shrink: 0; }
 
+/* ===== Player selection grid ===== */
+.player-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .player-grid { grid-template-columns: 1fr; }
+}
+
 /* ===== Set score row ===== */
 .set-score-row {
   display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
