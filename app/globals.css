@@ -273,7 +273,7 @@ input[type=text]:focus, input[type=date]:focus, select:focus { border-color: var
   .point-pad { flex-direction: column; }
 
   /* Ledger */
-  .ledger-row { grid-template-columns: 1fr auto; gap: 8px; }
+  .ledger-row { grid-template-columns: 1fr auto auto; gap: 8px; }
   .ledger-row .date-col,
   .ledger-row .vs-col { display: none; }
   .ledger-score { font-size: 12px; }

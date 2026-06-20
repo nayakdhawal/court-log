@@ -76,20 +76,24 @@ export default function PlayersTab({ players, matches }: Props) {
             }
             const c = p.skill_level ? SKILL_COLORS[p.skill_level] : null
             return (
-              <div className="ledger-row" key={p.id} style={{ gridTemplateColumns: '1fr 70px 110px 70px' }}>
-                <div className="ledger-names"><div className="winner">{p.name}</div></div>
-                <div style={{ color: '#8a8576', fontSize: 13 }}>{p.age != null ? `${p.age} yrs` : '—'}</div>
-                <div>
-                  {p.skill_level
-                    ? <span className="pill" style={{ background: c ? c.bg : 'var(--chalk-dim)', color: c ? c.text : '#8a8576' }}>{p.skill_level}</span>
-                    : <span style={{ color: '#9a9485', fontSize: 12 }}>—</span>
-                  }
+              <div className="ledger-row" key={p.id} style={{ gridTemplateColumns: '1fr auto' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div className="winner" style={{ fontWeight: 600, fontSize: 15 }}>{p.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {p.age != null && <span style={{ color: '#8a8576', fontSize: 12 }}>{p.age} yrs</span>}
+                    {p.age != null && p.skill_level && <span style={{ color: 'var(--line)', fontSize: 12 }}>•</span>}
+                    {p.skill_level && (
+                      <span className="pill" style={{ background: c ? c.bg : 'var(--chalk-dim)', color: c ? c.text : '#8a8576', padding: '2px 8px', fontSize: 11 }}>
+                        {p.skill_level}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                  <button className="btn btn-icon" onClick={() => setEditingId(p.id)} title="Edit" style={{ color: '#2A6B3D', fontSize: 20 }}>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <button className="btn btn-icon edit" onClick={() => setEditingId(p.id)} title="Edit" style={{ fontSize: 20 }}>
                     <i className="ti ti-edit" />
                   </button>
-                  <button className="btn btn-icon" onClick={() => playerHasMatches(p.name) ? setConfirmArchive(p) : handleArchive(p)} title="Delete" style={{ color: '#C44536', fontSize: 20 }}>
+                  <button className="btn btn-icon delete" onClick={() => playerHasMatches(p.name) ? setConfirmArchive(p) : handleArchive(p)} title="Delete" style={{ fontSize: 20 }}>
                     <i className="ti ti-trash" />
                   </button>
                 </div>
