@@ -60,7 +60,7 @@ export default function MatchLedger({ matches, players }: Props) {
             <div className="ledger-score mono">{setsDisplayString(m.setScores)}</div>
             <div className="ledger-meta">
               {!m.is_completed && <span className="pill pill-live" title="Winner projected from incomplete score">proj.</span>}
-              <button className="btn btn-icon edit" onClick={() => setEditingId(m.id)} title="Edit">
+              <button className="btn btn-icon" onClick={() => setEditingId(m.id)} title="Edit" style={{ color: '#2A6B3D', fontSize: 20 }}>
                 <i className="ti ti-edit" />
               </button>
             </div>

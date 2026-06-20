@@ -86,10 +86,10 @@ export default function PlayersTab({ players, matches }: Props) {
                   }
                 </div>
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                  <button className="btn btn-icon edit" onClick={() => setEditingId(p.id)} title="Edit">
+                  <button className="btn btn-icon" onClick={() => setEditingId(p.id)} title="Edit" style={{ color: '#2A6B3D', fontSize: 20 }}>
                     <i className="ti ti-edit" />
                   </button>
-                  <button className="btn btn-icon delete" onClick={() => playerHasMatches(p.name) ? setConfirmArchive(p) : handleArchive(p)} title="Delete">
+                  <button className="btn btn-icon" onClick={() => playerHasMatches(p.name) ? setConfirmArchive(p) : handleArchive(p)} title="Delete" style={{ color: '#C44536', fontSize: 20 }}>
                     <i className="ti ti-trash" />
                   </button>
                 </div>
