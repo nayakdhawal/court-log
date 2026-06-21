@@ -1,11 +1,15 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import type { MatchInput } from '@/types'
 
 /** Upserts a player by name; returns their id. */
-async function resolvePlayerId(supabase: Awaited<ReturnType<typeof createClient>>, name: string): Promise<number> {
+async function resolvePlayerId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  name: string,
+  userId: string | null
+): Promise<number> {
   const { data: existing } = await supabase
     .from('players')
     .select('id')
@@ -17,7 +21,7 @@ async function resolvePlayerId(supabase: Awaited<ReturnType<typeof createClient>
 
   const { data: created, error } = await supabase
     .from('players')
-    .insert({ name })
+    .insert({ name, user_id: userId })
     .select('id')
     .single()
   if (error) throw error
@@ -27,6 +31,7 @@ async function resolvePlayerId(supabase: Awaited<ReturnType<typeof createClient>
 export async function addMatch(input: MatchInput): Promise<void> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const userId = user?.id ?? null
 
   const { data: match, error: mErr } = await supabase
     .from('matches')
@@ -37,7 +42,7 @@ export async function addMatch(input: MatchInput): Promise<void> {
       is_completed: input.isCompleted,
       is_projected: input.isProjected,
       winner_side: input.winnerSide,
-      created_by: user?.id ?? null,
+      created_by: userId,
     })
     .select('id')
     .single()
@@ -46,7 +51,7 @@ export async function addMatch(input: MatchInput): Promise<void> {
   const matchId = match.id
 
   const allNames = [...input.sideANames, ...input.sideBNames]
-  const ids = await Promise.all(allNames.map(n => resolvePlayerId(supabase, n)))
+  const ids = await Promise.all(allNames.map(n => resolvePlayerId(supabase, n, userId)))
   const sideAIds = ids.slice(0, input.sideANames.length)
   const sideBIds = ids.slice(input.sideANames.length)
 
@@ -67,6 +72,8 @@ export async function addMatch(input: MatchInput): Promise<void> {
   const { error: sErr } = await supabase.from('match_sets').insert(sets)
   if (sErr) throw sErr
 
+  revalidateTag('matches', 'max')
+  revalidateTag('players', 'max')
   revalidatePath('/history')
   revalidatePath('/stats')
   revalidatePath('/log')
@@ -74,6 +81,8 @@ export async function addMatch(input: MatchInput): Promise<void> {
 
 export async function updateMatch(matchId: number, input: MatchInput): Promise<void> {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const userId = user?.id ?? null
 
   const { error: mErr } = await supabase
     .from('matches')
@@ -92,7 +101,7 @@ export async function updateMatch(matchId: number, input: MatchInput): Promise<v
   // Rebuild participants
   await supabase.from('match_participants').delete().eq('match_id', matchId)
   const allNames = [...input.sideANames, ...input.sideBNames]
-  const ids = await Promise.all(allNames.map(n => resolvePlayerId(supabase, n)))
+  const ids = await Promise.all(allNames.map(n => resolvePlayerId(supabase, n, userId)))
   const sideAIds = ids.slice(0, input.sideANames.length)
   const sideBIds = ids.slice(input.sideANames.length)
   const participants = [
@@ -114,6 +123,8 @@ export async function updateMatch(matchId: number, input: MatchInput): Promise<v
   const { error: sErr } = await supabase.from('match_sets').insert(sets)
   if (sErr) throw sErr
 
+  revalidateTag('matches', 'max')
+  revalidateTag('players', 'max')
   revalidatePath('/history')
   revalidatePath('/stats')
 }
@@ -124,10 +135,19 @@ export async function addPlayer(
   skillLevel: string | null,
 ): Promise<void> {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   const { error } = await supabase
     .from('players')
-    .insert({ name, age, skill_level: skillLevel || null })
+    .insert({
+      name,
+      age,
+      skill_level: skillLevel || null,
+      user_id: user?.id ?? null
+    })
   if (error) throw error
+
+  revalidateTag('players', 'max')
   revalidatePath('/players')
   revalidatePath('/log')
   revalidatePath('/live')
@@ -147,8 +167,8 @@ export async function updatePlayer(
     .eq('id', id)
   if (error) throw error
 
-  // If name changed, propagate to live match participants already in history is handled by DB joins
-  // (names are stored via player_id FK, so join always returns current name)
+  revalidateTag('players', 'max')
+  revalidateTag('matches', 'max')
   revalidatePath('/players')
   revalidatePath('/history')
   revalidatePath('/stats')
@@ -161,6 +181,8 @@ export async function archivePlayer(id: number): Promise<void> {
     .update({ archived_at: new Date().toISOString() })
     .eq('id', id)
   if (error) throw error
+
+  revalidateTag('players', 'max')
   revalidatePath('/players')
 }
 
@@ -178,6 +200,7 @@ export async function deleteMatch(matchId: number): Promise<void> {
   const { error: mErr } = await supabase.from('matches').delete().eq('id', matchId)
   if (mErr) throw mErr
 
+  revalidateTag('matches', 'max')
   revalidatePath('/history')
   revalidatePath('/stats')
 }

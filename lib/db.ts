@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { createStaticClient } from '@/lib/supabase/server'
 import type { Player, MatchView } from '@/types'
+import { unstable_cache } from 'next/cache'
 
 type RawMatch = {
   id: number
@@ -45,28 +46,36 @@ function toMatchView(raw: RawMatch): MatchView {
   }
 }
 
-export async function getPlayers(): Promise<Player[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('players')
-    .select('*')
-    .is('archived_at', null)
-    .order('name')
-  if (error) throw error
-  return data as Player[]
-}
+export const getPlayers = unstable_cache(
+  async (): Promise<Player[]> => {
+    const supabase = createStaticClient()
+    const { data, error } = await supabase
+      .from('players')
+      .select('*')
+      .is('archived_at', null)
+      .order('name')
+    if (error) throw error
+    return data as Player[]
+  },
+  ['players'],
+  { tags: ['players'] }
+)
 
-export async function getMatches(): Promise<MatchView[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('matches')
-    .select(`
-      id, played_on, match_type, best_of, is_completed, is_projected, winner_side,
-      match_participants ( side, players ( name ) ),
-      match_sets ( set_number, games_side_0, games_side_1 )
-    `)
-    .order('played_on', { ascending: false })
-    .order('created_at', { ascending: false })
-  if (error) throw error
-  return (data as unknown as RawMatch[]).map(toMatchView)
-}
+export const getMatches = unstable_cache(
+  async (): Promise<MatchView[]> => {
+    const supabase = createStaticClient()
+    const { data, error } = await supabase
+      .from('matches')
+      .select(`
+        id, played_on, match_type, best_of, is_completed, is_projected, winner_side,
+        match_participants ( side, players ( name ) ),
+        match_sets ( set_number, games_side_0, games_side_1 )
+      `)
+      .order('played_on', { ascending: false })
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return (data as unknown as RawMatch[]).map(toMatchView)
+  },
+  ['matches'],
+  { tags: ['matches'] }
+)
