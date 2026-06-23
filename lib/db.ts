@@ -1,4 +1,4 @@
-import { createStaticClient } from '@/lib/supabase/server'
+import { createClientWithCookies } from '@/lib/supabase/server'
 import type { Player, MatchView } from '@/types'
 import { unstable_cache } from 'next/cache'
 
@@ -47,8 +47,8 @@ function toMatchView(raw: RawMatch): MatchView {
 }
 
 export const getPlayers = unstable_cache(
-  async (): Promise<Player[]> => {
-    const supabase = createStaticClient()
+  async (cookieList: { name: string; value: string }[]): Promise<Player[]> => {
+    const supabase = createClientWithCookies(cookieList)
     const { data, error } = await supabase
       .from('players')
       .select('*')
@@ -62,8 +62,8 @@ export const getPlayers = unstable_cache(
 )
 
 export const getMatches = unstable_cache(
-  async (): Promise<MatchView[]> => {
-    const supabase = createStaticClient()
+  async (cookieList: { name: string; value: string }[]): Promise<MatchView[]> => {
+    const supabase = createClientWithCookies(cookieList)
     const { data, error } = await supabase
       .from('matches')
       .select(`

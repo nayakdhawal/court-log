@@ -28,3 +28,16 @@ export function createStaticClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
+
+export function createClientWithCookies(cookieList: { name: string; value: string }[]) {
+  return _createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieList,
+        setAll: () => {},
+      },
+    },
+  )
+}
